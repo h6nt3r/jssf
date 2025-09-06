@@ -12,3 +12,7 @@ jshelper -h
 ```
 jshelper -u "https://domain.com/file.js" -links -o jslinks.txt
 ```
+#### File scanning mode
+```
+jshelper -f js_urls.txt -links -o jslinks.txt
+```
