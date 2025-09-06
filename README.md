@@ -7,3 +7,8 @@ cd
 sudo ln -sf /opt/jshelper/jshelper.py /usr/local/bin/jshelper
 jshelper -h
 ```
+## Usage
+#### Single url
+```
+jshelper -u "https://domain.com/file.js" -links -o jslinks.txt
+```
