@@ -8,6 +8,10 @@ sudo ln -sf /opt/jshelper/jshelper.py /usr/local/bin/jshelper
 jshelper -h
 ```
 ## Usage
+#### Piping mode
+```
+echo "https://domain.com/secret.js" | jshelper -links -o jslinks.txt
+```
 #### Single url
 ```
 jshelper -u "https://domain.com/file.js" -links -o jslinks.txt
