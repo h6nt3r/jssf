@@ -7,7 +7,7 @@ var RegexPatterns = map[string]string{
 	"Google OAuth Access Token":           `ya29\.[0-9A-Za-z\-_]+`,
 	"Firebase API Key":                    `AAAA[A-Za-z0-9_\-]{7}:[A-Za-z0-9_\-]{140}`,
 	"AWS Access Key ID":                   `A[SK]IA[0-9A-Z]{16}`,
-	"AWS Secret Access Key (env/var)": `(?i)(?:aws[_\- ]?secret[_\- ]?access[_\- ]?key|aws_secret_access_key|AWS_SECRET_ACCESS_KEY)\s*[:=]\s*['"]?([A-Za-z0-9+/]{40})['"]?`,
+	"AWS Secret Access Key (env/var)":	   `(?i)(?:aws[_\- ]?secret[_\- ]?access[_\- ]?key|aws_secret_access_key|AWS_SECRET_ACCESS_KEY)\s*[:=]\s*['"]?([A-Za-z0-9+/]{40})['"]?`,
 	"DigitalOcean Token":                  `dop_v1_[a-f0-9]{64}`,
 	"Heroku API Key":                      `heroku_[0-9a-fA-F]{32}`,
 	"GitHub Token":                        `ghp_[A-Za-z0-9]{36,}`,
