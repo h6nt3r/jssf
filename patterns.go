@@ -27,6 +27,9 @@ var RegexPatterns = map[string]string{
 	"Vue App Publishable Key":			   `"VUE_APP_CHARGEBEE_PUBLISHABLE_KEY":\s*"[^"]*"`
 	"Vue App Auth Client Id":			   `"VUE_APP_GAPI_AUTH_CLIENT_ID":\s*"[^"]*"`
 	"Vue App Teams Client Id":			   `"VUE_APP_GENCORE_MS_TEAMS_CLIENT_ID":\s*"[^"]*"`
+    "Authorization_basic":				   `Basic\s+[a-zA-Z0-9\+\/=]{24}`,
+    "Authorization_bearer":				   `Bearer\s+[a-zA-Z0-9\-_\.]{24}(\.[a-zA-Z0-9\-_\.]{44}){2}`,
+    "Authorization_api":				   `api_key\s+[A-Z0-9]{5}(\-[A-Z0-9]{5}){4}`,
 
 	// --- Auth / JWT / Session ---
 	"JWT Token":                           `eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+`,
