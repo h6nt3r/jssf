@@ -23,6 +23,10 @@ var RegexPatterns = map[string]string{
 	"X API Key":                           `"X-API-KEY":"([0-9a-fA-F-]+)"`,
 	"AccessKey":		       			   `accesskey:\s*"[^"]*`,
 	"SecretKey":		       			   `secretkey:\s*"[^"]*`,
+	"Vue App Api Server Url":			   `"VUE_APP_API_SERVER_URL_XDLP":\s*"[^"]*"`
+	"Vue App Publishable Key":			   `"VUE_APP_CHARGEBEE_PUBLISHABLE_KEY":\s*"[^"]*"`
+	"Vue App Auth Client Id":			   `"VUE_APP_GAPI_AUTH_CLIENT_ID":\s*"[^"]*"`
+	"Vue App Teams Client Id":			   `"VUE_APP_GENCORE_MS_TEAMS_CLIENT_ID":\s*"[^"]*"`
 
 	// --- Auth / JWT / Session ---
 	"JWT Token":                           `eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+`,
