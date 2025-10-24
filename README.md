@@ -97,3 +97,16 @@ jssf -f javascript_urls.txt -secret -s -o out.txt
 ```
 jssf -f javascript_urls.txt -custom links,path,secret,subs -exclude svg,jpg,jpeg,png,woff2,css,ico -o out.txt
 ```
+## Installation
+```
+go install -v github.com/h6nt3r/jssf@latest
+```
+## Binary Build
+```
+git clone https://github.com/h6nt3r/jssf.git
+cd jssf
+go build -o jssf jssf.go patterns.go
+sudo mv jssf /usr/local/bin/
+cd
+jssf -h
+```
