@@ -21,6 +21,8 @@ var RegexPatterns = map[string]string{
 	"Telegram Bot Token":                  `\d{9}:[a-zA-Z0-9_-]{35}`,
 	"Discord Token":                       `[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}`,
 	"X API Key":                           `"X-API-KEY":"([0-9a-fA-F-]+)"`,
+	"AccessKey":		       			   `accesskey:\s*"[^"]*`,
+	"SecretKey":		       			   `secretkey:\s*"[^"]*`,
 
 	// --- Auth / JWT / Session ---
 	"JWT Token":                           `eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+`,
