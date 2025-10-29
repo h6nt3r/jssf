@@ -10,12 +10,14 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"os/user"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
@@ -27,13 +29,13 @@ const (
 
 // --- Flags ---
 var (
-	flagURL     = flag.String("u", "", "Scan a single URL (http[s]://...)")
+	flagURL     = flag.String("u", "", "Scan a single URL")
 	flagFile    = flag.String("f", "", "Scan a file (each line is a URL)")
-	flagSecret  = flag.Bool("secret", false, "Detect secret patterns using regex (from patterns.go)")
+	flagSecrets = flag.Bool("secrets", false, "Detect secret patterns using regex (from patterns.go)")
 	flagLinks   = flag.Bool("links", false, "Extract in-scope links (relative + absolute)")
 	flagSubs    = flag.Bool("subs", false, "Extract only subdomains for the target's root domain (exclusive with -links)")
-	flagPath    = flag.Bool("path", false, "Extract file system paths (absolute, relative, home-relative)")
-	flagCustom  = flag.String("custom", "", "Custom mode: comma-separated list of modes (links,path,secret,subs)")
+	flagPaths   = flag.Bool("paths", false, "Extract file system paths (absolute, relative, home-relative)")
+	flagCustom  = flag.String("custom", "", "Custom mode: comma-separated list of modes (links,paths,secrets,subs)")
 	flagOutfile = flag.String("o", "", "Save output to plain text file (optional)")
 	flagTimeout = flag.Int("timeout", 5, "HTTP request timeout in seconds")
 	flagThread  = flag.Int("thread", 5, "Number of concurrent threads")
@@ -41,6 +43,27 @@ var (
 	flagSilent  = flag.Bool("s", false, "Silent mode (hide banner and summary)")
 	flagHelp    = flag.Bool("h", false, "Show help")
 )
+
+// --- Custom Usage Function ---
+func usage() {
+	fmt.Fprintf(os.Stderr, `Usage: jssf [OPTIONS]
+
+Options:
+  -h              Show help
+  -u string       Scan a single URL
+  -f string       Scan a file (each line is a URL)
+  -custom string  Custom mode: comma-separated list of modes (links,paths,secrets,subs)
+  -exclude string Comma-separated list of extensions to exclude (e.g. png,jpg,svg)
+  -links          Extract in-scope links (relative + absolute)
+  -paths          Extract file system paths (absolute, relative, home-relative)
+  -secrets        Detect secret patterns using regex (from patterns.go)
+  -subs           Extract only subdomains for the target's root domain (exclusive with -links)
+  -thread int     Number of concurrent threads (default 5)
+  -timeout int    HTTP request timeout in seconds (default 5)
+  -s              Silent mode (hide banner and summary)
+  -o string       Save output to plain text file (optional)
+`)
+}
 
 // --- Helper: expand ~ ---
 func expandPath(p string) string {
@@ -89,9 +112,7 @@ func shouldExclude(target string, excluded []string) bool {
 	return false
 }
 
-// --- Link extraction regex ---
-var linkRegex = regexp.MustCompile(`(?i)(?:href|src|url|action)\s*=\s*["']([^"'>\s]+)["']|fetch\(["']([^"']+)["']\)`)
-
+// --- Extract links (regex moved to patterns.go) ---
 type linkItem struct {
 	URL  string
 	Type string
@@ -137,9 +158,7 @@ func extractLinks(content, base, rootDomain string, excludedExts []string) []lin
 	return links
 }
 
-// --- Extract file system paths ---
-var pathRegex = regexp.MustCompile(`(?m)(?:["'\s]|^)(~\/[^\s"'<>]+|\/[A-Za-z0-9._\-/]+|(?:\.\.?\/)[A-Za-z0-9._\-/]+)(?:["'\s]|$)`)
-
+// --- Extract file system paths (regex moved to patterns.go) ---
 type pathItem struct {
 	Path string
 	Type string
@@ -282,16 +301,33 @@ func readLines(path string) ([]string, error) {
 	return lines, scanner.Err()
 }
 
+// --- Summary Print ---
+func printSummary(mu *sync.Mutex, uniqueFound map[string]bool, totalErrors int64, start time.Time) {
+	duration := time.Since(start)
+	minutes := int(duration.Minutes())
+	seconds := int(duration.Seconds()) - minutes*60
+
+	mu.Lock()
+	totalUnique := len(uniqueFound)
+	mu.Unlock()
+
+	fmt.Printf("\nTotal links/path/secret/subs Found: %d\n", totalUnique)
+	fmt.Printf("Total Error: %d\n", totalErrors)
+	fmt.Printf("Total Time Taken: %d Minute %d Second\n", minutes, seconds)
+}
+
 // --- Main ---
 func main() {
+	flag.Usage = usage
 	flag.Parse()
+
 	if *flagHelp {
-		flag.Usage()
+		usage()
 		return
 	}
 
-	if *flagCustom != "" && (*flagLinks || *flagSubs || *flagPath || *flagSecret) {
-		fmt.Fprintln(os.Stderr, "[!] Error: -custom cannot be used with -links, -subs, -path, or -secret")
+	if *flagCustom != "" && (*flagLinks || *flagSubs || *flagPaths || *flagSecrets) {
+		fmt.Fprintln(os.Stderr, "[!] Error: -custom cannot be used with -links, -subs, -paths, or -secrets")
 		return
 	}
 
@@ -300,7 +336,7 @@ func main() {
 		modes := strings.Split(strings.ToLower(*flagCustom), ",")
 		for _, mode := range modes {
 			mode = strings.TrimSpace(mode)
-			if mode == "links" || mode == "subs" || mode == "path" || mode == "secret" {
+			if mode == "links" || mode == "subs" || mode == "paths" || mode == "secrets" {
 				customModes[mode] = true
 			} else {
 				fmt.Fprintf(os.Stderr, "[!] Invalid custom mode: %s\n", mode)
@@ -334,7 +370,7 @@ func main() {
 	}
 
 	if !*flagSilent {
-		fmt.Println("Javascript Secret Finder. Current version 2.0.1")
+		fmt.Println("Javascript Secret Finder. Current version 2.0.2")
 		fmt.Println("Developed by github.com/h6nt3r\n")
 	}
 
@@ -365,7 +401,7 @@ func main() {
 	}
 
 	compiled := []compiledPattern{}
-	if *flagSecret || customModes["secret"] {
+	if *flagSecrets || customModes["secrets"] {
 		compiled = compilePatterns()
 	}
 
@@ -377,6 +413,15 @@ func main() {
 
 	uniqueFound := make(map[string]bool)
 	var mu sync.Mutex
+
+	// Ctrl+C handler
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		printSummary(&mu, uniqueFound, atomic.LoadInt64(&totalErrors), start)
+		os.Exit(0)
+	}()
 
 	for i, t := range targets {
 		index := i + 1
@@ -404,20 +449,20 @@ func main() {
 					if !uniqueFound[key] {
 						uniqueFound[key] = true
 						colored := fmt.Sprintf("%s%s%s", colorGoldenBrown, l.URL, colorReset)
-						sb.WriteString(fmt.Sprintf("Link-%s(%d): %s\n", l.Type, i+1, colored))
+						sb.WriteString(fmt.Sprintf("Link-%s(%d): %s (%d)\n", l.Type, i+1, colored, index))
 					}
 					mu.Unlock()
 				}
 			}
 
-			if *flagPath || customModes["path"] {
+			if *flagPaths || customModes["paths"] {
 				for i, p := range extractPaths(body, excludedExts) {
 					key := "path:" + p.Path
 					mu.Lock()
 					if !uniqueFound[key] {
 						uniqueFound[key] = true
 						colored := fmt.Sprintf("%s%s%s", colorGoldenBrown, p.Path, colorReset)
-						sb.WriteString(fmt.Sprintf("Path-%s(%d): %s\n", p.Type, i+1, colored))
+						sb.WriteString(fmt.Sprintf("Path-%s(%d): %s (%d)\n", p.Type, i+1, colored, index))
 					}
 					mu.Unlock()
 				}
@@ -429,20 +474,23 @@ func main() {
 					if !uniqueFound[s] {
 						uniqueFound[s] = true
 						colored := fmt.Sprintf("%s%s%s", colorGoldenBrown, s, colorReset)
-						sb.WriteString(fmt.Sprintf("Subdomain(%d): %s\n", i+1, colored))
+						sb.WriteString(fmt.Sprintf("Subdomain(%d): %s (%d)\n", i+1, colored, index))
 					}
 					mu.Unlock()
 				}
 			}
 
-			if *flagSecret || customModes["secret"] {
+			if *flagSecrets || customModes["secrets"] {
+				secretCount := 0
 				for _, m := range scanText(body, compiled) {
 					key := m.PatternName + ":" + m.Match
 					mu.Lock()
 					if !uniqueFound[key] {
 						uniqueFound[key] = true
+						secretCount++
 						colored := fmt.Sprintf("%s%s%s", colorGoldenBrown, m.Match, colorReset)
-						sb.WriteString(fmt.Sprintf("%s -> %s\n", strings.ToLower(m.PatternName), colored))
+						// Prefix each secret line with Secrets(N)
+						sb.WriteString(fmt.Sprintf("Secrets(%d) %s -> %s (%d)\n", secretCount, strings.ToLower(m.PatternName), colored, index))
 					}
 					mu.Unlock()
 				}
@@ -467,16 +515,6 @@ func main() {
 	}
 
 	if !*flagSilent {
-		duration := time.Since(start)
-		minutes := int(duration.Minutes())
-		seconds := int(duration.Seconds()) - minutes*60
-
-		mu.Lock()
-		totalUnique := len(uniqueFound)
-		mu.Unlock()
-
-		fmt.Printf("\nTotal links/path/secret/subs Found: %d\n", totalUnique)
-		fmt.Printf("Total Error: %d\n", atomic.LoadInt64(&totalErrors))
-		fmt.Printf("Total Time Taken: %d Minute %d Second\n", minutes, seconds)
+		printSummary(&mu, uniqueFound, atomic.LoadInt64(&totalErrors), start)
 	}
 }

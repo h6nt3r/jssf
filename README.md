@@ -30,43 +30,34 @@
 
 ### Options:
 ```
-jssf -h
-Usage of jssf:
-  -custom string
-    	Custom mode: comma-separated list of modes (links,path,secret,subs)
-  -exclude string
-    	Comma-separated list of extensions to exclude (e.g. png,jpg,svg)
-  -f string
-    	Scan a file (each line is a URL)
-  -h	Show help
-  -links
-    	Extract in-scope links (relative + absolute)
-  -o string
-    	Save output to plain text file (optional)
-  -path
-    	Extract file system paths (absolute, relative, home-relative)
-  -s	Silent mode (hide banner and summary)
-  -secret
-    	Detect secret patterns using regex (from patterns.go)
-  -subs
-    	Extract only subdomains for the target's root domain (exclusive with -links)
-  -thread int
-    	Number of concurrent threads (default 5)
-  -timeout int
-    	HTTP request timeout in seconds (default 5)
-  -u string
-    	Scan a single URL (http[s]://...)
+jssf -h                                        
+Usage: jssf [OPTIONS]
+
+Options:
+  -h              Show help
+  -u string       Scan a single URL
+  -f string       Scan a file (each line is a URL)
+  -custom string  Custom mode: comma-separated list of modes (links,paths,secrets,subs)
+  -exclude string Comma-separated list of extensions to exclude (e.g. png,jpg,svg)
+  -links          Extract in-scope links (relative + absolute)
+  -paths          Extract file system paths (absolute, relative, home-relative)
+  -secrets        Detect secret patterns using regex (from patterns.go)
+  -subs           Extract only subdomains for the target's root domain (exclusive with -links)
+  -thread int     Number of concurrent threads (default 5)
+  -timeout int    HTTP request timeout in seconds (default 5)
+  -s              Silent mode (hide banner and summary)
+  -o string       Save output to plain text file (optional)
 ```
 ## Usage:
 * Piping mode
 ```
-cat urls.txt | jssf -secret -o out.txt
+cat urls.txt | jssf -secrets -o out.txt
 ```
 * Single url scanning
 ```
-jssf -u "http://testphp.vulnweb.com/medias/js/common_functions.js" -secret -o out.txt
+jssf -u "http://testphp.vulnweb.com/medias/js/common_functions.js" -secrets -o out.txt
 ```
-* File contain `JS` url `secret` scanning
+* File contain `JS` url `secrets` scanning
 * In file `cat javascript_urls.txt` should contain looks like this:
 ```
 http://testhtml5.vulnweb.com/static/app/post.js
@@ -83,19 +74,19 @@ http://rest.vulnweb.com/docs/vendor/require.min.js
 http://testphp.vulnweb.com/bxss/test.js
 ```
 ```
-jssf -f javascript_urls.txt -secret -o out.txt
+jssf -f javascript_urls.txt -secrets -o out.txt
 ```
-* File contain `JS` url with all `links,path,secret,subs` scanning
+* File contain `JS` url with all `links,paths,secrets,subs` scanning
 ```
-jssf -f javascript_urls.txt -custom links,path,secret,subs -o out.txt
+jssf -f javascript_urls.txt -custom links,paths,secrets,subs -o out.txt
 ```
 * File with silent scanning
 ```
-jssf -f javascript_urls.txt -secret -s -o out.txt
+jssf -f javascript_urls.txt -secrets -s -o out.txt
 ```
 * My favourite scanning mode
 ```
-jssf -f javascript_urls.txt -custom links,path,secret,subs -exclude svg,jpg,jpeg,png,woff2,css,ico -o out.txt
+jssf -f javascript_urls.txt -custom links,paths,secrets,subs -exclude svg,jpg,jpeg,png,woff2,css,ico -o out.txt
 ```
 ## Installation
 ```
