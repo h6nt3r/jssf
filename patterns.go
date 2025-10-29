@@ -30,6 +30,7 @@ var RegexPatterns = map[string]string{
     "Authorization_basic":				   `Basic\s+[a-zA-Z0-9\+\/=]{24}`,
     "Authorization_bearer":				   `Bearer\s+[a-zA-Z0-9\-_\.]{24}(\.[a-zA-Z0-9\-_\.]{44}){2}`,
     "Authorization_api":				   `api_key\s+[A-Z0-9]{5}(\-[A-Z0-9]{5}){4}`,
+	"Configuration API Key"				   `"CONFIGURATION_API_KEY":"[A-Za-z0-9]+"`,
 
 	// --- Auth / JWT / Session ---
 	"JWT Token":                           `eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+`,
