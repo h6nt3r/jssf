@@ -18,7 +18,7 @@ var RegexPatterns = map[string]string{
 	"Slack Token":                         `xox[baprs]-[0-9a-zA-Z]{10,48}`,
 	"Stripe Live Key":                     `sk_live_[0-9a-zA-Z]{24}`,
 	"SendGrid API Key":                    `SG\.[A-Za-z0-9\-_]{22}\.[A-Za-z0-9\-_]{43}`,
-	"Mailgun API Key":                     `key-[0-9a-zA-Z]{32}`,
+	"Mailgun Private API Key":             `key-[0-9a-zA-Z]{32}`,
 	"Facebook Access Token":               `EAACEdEose0cBA[0-9A-Za-z]+`,
 	"Telegram Bot Token":                  `\d{9}:[a-zA-Z0-9_-]{35}`,
 	"Discord Token":                       `[MN][A-Za-z\d]{23}\.[\w-]{6}\.[\w-]{27}`,
