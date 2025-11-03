@@ -34,6 +34,11 @@ var RegexPatterns = map[string]string{
 	"Authorization_bearer":                `Bearer\s+[a-zA-Z0-9\-_\.]{24}(\.[a-zA-Z0-9\-_\.]{44}){2}`,
 	"Authorization_api":                   `api_key\s+[A-Z0-9]{5}(\-[A-Z0-9]{5}){4}`,
 
+	// --- NEW flexible / OCR-friendly patterns ---
+	"Authorization_generic":               `(?i)(basic|bearer|api_key)\s+[A-Za-z0-9_\-\.=:+/]{8,}`,
+	"Authorization_header_flexible":       `(?i)"?authorization"?\s*[:=]\s*"?([Bb]asic|[Bb]earer)\s+[A-Za-z0-9_\-\.=:+/]{8,}"?`,
+
+
 	// --- Auth / JWT / Session ---
 	"JWT Token":      `eyJ[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+\.[a-zA-Z0-9_\-]+`,
 	"Bearer Token":   `(?i)bearer\s+[A-Za-z0-9_\-\.=:_\+\/]+`,
